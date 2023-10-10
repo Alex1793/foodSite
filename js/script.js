@@ -217,29 +217,30 @@ window.addEventListener('DOMContentLoaded', () => {
 
             const ststusMessage = document.createElement('img');
             ststusMessage.src = message.loading;
-            ststusMessage.style.ccsText = `
+            ststusMessage.style.cssText = `
                 display: block;
                 margin: 0 auto;
+                margin-top: 10px;
             `
             form.insertAdjacentElement('afterend', ststusMessage);
 
-            const request = new XMLHttpRequest();
-            request.open('POST', 'server.php');
-
             const formData = new FormData(form);
-            request.send(formData);
+            
+            fetch('server.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(data => data.text())
+            .then(data => {
+                console.log(data);
+                showThanksModal(message.success);
+                ststusMessage.remove();
+            }).catch(() => {
+                showThanksModal(message.failed);
+            }).finally(() => {
+                form.reset();
+            })
 
-            request.addEventListener('load', () => {
-                if(request.status === 200) {
-                    console.log(request.response);
-                    showThanksModal(message.success);
-                    form.reset();
-
-                    ststusMessage.remove();
-                } else {
-                    showThanksModal(message.failed);
-                }
-            });
         })
     }
 
