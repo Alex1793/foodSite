@@ -100,8 +100,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // Modal
 
     const btnModal = document.querySelectorAll('[data-modal]'),
-          modal = document.querySelector('.modal'),
-          btnClose = document.querySelector('[data-close]');
+          modal = document.querySelector('.modal');
 
     function showModal () {
         modal.style.display = 'block';
@@ -118,10 +117,8 @@ window.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = '';
     }
 
-    btnClose.addEventListener('click', closeModal);
-
     modal.addEventListener('click', (e) => {
-        if(e.target === modal) {
+        if(e.target === modal || e.target.getAttribute('data-close') == '') {
             closeModal();    
         }
     })
@@ -132,7 +129,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     })
 
-    const showModalbyTime = setTimeout(showModal, 30000);
+    const showModalbyTime = setTimeout(showModal, 3000000);
 
 
     function showModalbyScroll () {
@@ -198,4 +195,75 @@ window.addEventListener('DOMContentLoaded', () => {
         'Меню "Постное"', 
         'Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.',
         28).createCard();
+
+    // Forms
+
+
+    const forms = document.querySelectorAll('form');
+
+    const message = {
+        loading: 'img/form/spinner.svg',
+        success: 'Спасибо! Мы скоро с вами свяжемся',
+        failed: 'Что-то пошло не так'
+    }
+
+    forms.forEach(item => {
+        postData(item)
+    })
+
+    function postData (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const ststusMessage = document.createElement('img');
+            ststusMessage.src = message.loading;
+            ststusMessage.style.ccsText = `
+                display: block;
+                margin: 0 auto;
+            `
+            form.insertAdjacentElement('afterend', ststusMessage);
+
+            const request = new XMLHttpRequest();
+            request.open('POST', 'server.php');
+
+            const formData = new FormData(form);
+            request.send(formData);
+
+            request.addEventListener('load', () => {
+                if(request.status === 200) {
+                    console.log(request.response);
+                    showThanksModal(message.success);
+                    form.reset();
+
+                    ststusMessage.remove();
+                } else {
+                    showThanksModal(message.failed);
+                }
+            });
+        })
+    }
+
+    function showThanksModal (message) {
+
+        const mDialog = document.querySelector('.modal__dialog');
+        mDialog.style.display = 'none';
+        showModal();
+
+        const thanksModal = document.createElement('div');
+        thanksModal.classList.add('modal__dialog');
+        thanksModal.innerHTML = `
+            <div class="modal__content">
+                <div data-close class="modal__close">×</div>
+                <div class="modal__title">${message}</div>
+            </div>
+        `;
+
+        document.querySelector('.modal').append(thanksModal);
+
+        setTimeout(() => {
+            thanksModal.remove();
+            mDialog.style.display = 'block';
+            closeModal();
+        }, 3000);
+    }
 });
