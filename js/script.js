@@ -147,11 +147,12 @@ window.addEventListener('DOMContentLoaded', () => {
     const cardsContainer = document.querySelector('.menu__field .container');
 
     class Cards {
-        constructor (img, title, descr, price) {
+        constructor (img, alt, title, descr, price) {
             this.img = img;
             this.title = title;
             this.descr = descr;
             this.price = price;
+            this.alt = alt;
             this.transfer = 27;
             this.changeToUAH();
         }
@@ -165,7 +166,7 @@ window.addEventListener('DOMContentLoaded', () => {
             div.classList.add('menu__item');
             
             div.innerHTML = `
-                <img src=${this.img} alt="menu">
+                <img src=${this.img} alt=${this.alt}>
                 <h3 class="menu__item-subtitle">${this.title}</h3>
                 <div class="menu__item-descr">${this.descr}</div>
                 <div class="menu__item-divider"></div>
@@ -179,25 +180,24 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    new Cards('img/tabs/vegy.jpg', 
-        'Меню "Фитнес"', 
-        'Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной ценой и высоким качеством!',
-        23).createCard();
+    const getResours = async (url) => {
+        const res = await fetch(url);
 
+        if(!res.ok) {
+            throw new Error(`Could not fetch ${url}, status ${res.status}`);
+        }
 
-    new Cards('img/tabs/elite.jpg', 
-        'Меню “Премиум”', 
-        'В меню “Премиум” мы используем не только красивый дизайн упаковки, но и    качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода в ресторан!',
-        31).createCard();
+        return await res.json();
+    }
 
-
-    new Cards('img/tabs/post.jpg', 
-        'Меню "Постное"', 
-        'Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное количество белков за счет тофу и импортных вегетарианских стейков.',
-        28).createCard();
+    getResours('http://localhost:3000/menu')
+        .then(data => {
+            data.forEach(({img, altimg, title, descr, price}) => {
+                new Cards(img, altimg, title, descr, price).createCard();
+            })
+        })
 
     // Forms
-
 
     const forms = document.querySelectorAll('form');
 
@@ -208,10 +208,22 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     forms.forEach(item => {
-        postData(item)
+        bindPostData(item)
     })
 
-    function postData (form) {
+    const postData = async (url, data) => {
+        const res = await fetch(url , {
+            method: 'POST',
+            headers: {
+                'Content-type': 'application/json'
+            },
+            body: data
+        });
+
+        return await res.json();
+    }
+
+    function bindPostData (form) {
         form.addEventListener('submit', (e) => {
             e.preventDefault();
 
@@ -225,12 +237,10 @@ window.addEventListener('DOMContentLoaded', () => {
             form.insertAdjacentElement('afterend', ststusMessage);
 
             const formData = new FormData(form);
+
+            const json = JSON.stringify(Object.fromEntries(formData.entries())); 
             
-            fetch('server.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(data => data.text())
+            postData('http://localhost:3000/requests', json)
             .then(data => {
                 console.log(data);
                 showThanksModal(message.success);
