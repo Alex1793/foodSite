@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/Alex1793/foodSite#readme",
   "devDependencies": {
-    "json-server": "^0.17.4"
+    "json-server": "^0.17.4",
+    "webpack-cli": "^5.1.4"
   }
 }
